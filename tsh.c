@@ -169,11 +169,52 @@ int main(int argc, char **argv)
  */
 void eval(char *cmdline) 
 {
+	char *argv[MAXARGS];
+	pid_t pid;
+	int bg;
+	int child_status;
+
+	//명령어를 parseline을 통해 분리
+	bg = parseline(cmdline, argv);
+
+	//parsing된 명령어를 전달
+	if(!builtin_cmd(argv)){
+		//if((pid = fork()) < 0)
+		//	unix_error("fork error");
+		if((pid = fork()) == 0){
+			if((execve(argv[0], argv, environ) < 0)){
+				printf("%s : Command not found.\n", argv[0]);
+				exit(0);
+			}
+		}
+		else{
+			if(bg == 1){
+				addjob(jobs, pid, BG, cmdline);
+				printf("(%d) (%d) %s", pid2jid(pid), pid, cmdline);
+			}
+			else{
+				addjob(jobs, pid, FG, cmdline);
+				waitpid(pid, &child_status, 0);
+			}
+		}
+	}
+
 	return;
 }
 
 int builtin_cmd(char **argv)
 {
+	char *cmd = argv[0];
+
+	if(!strcmp(cmd, "quit")){
+		exit(0);
+	}
+
+	//if(!strcmp(cmd, "jobs")){
+	//	listjobs(jobs, 1);
+	//	return 1;
+	//}
+
 	return 0;
 }
 
