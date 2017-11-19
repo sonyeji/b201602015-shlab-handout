@@ -179,21 +179,21 @@ void eval(char *cmdline)
 
 	//parsing된 명령어를 전달
 	if(!builtin_cmd(argv)){
-		//if((pid = fork()) < 0)
-		//	unix_error("fork error");
-		if((pid = fork()) == 0){
+		if((pid = fork()) < 0)
+			unix_error("fork error");
+		if(pid == 0){
 			if((execve(argv[0], argv, environ) < 0)){
 				printf("%s : Command not found.\n", argv[0]);
 				exit(0);
 			}
 		}
 		else{
-			if(bg == 1){
+			if(bg){
 				addjob(jobs, pid, BG, cmdline);
 				printf("(%d) (%d) %s", pid2jid(pid), pid, cmdline);
 			}
 			else{
-				addjob(jobs, pid, FG, cmdline);
+				//addjob(jobs, pid, FG, cmdline);
 				waitpid(pid, &child_status, 0);
 			}
 		}
@@ -210,10 +210,10 @@ int builtin_cmd(char **argv)
 		exit(0);
 	}
 
-	//if(!strcmp(cmd, "jobs")){
-	//	listjobs(jobs, 1);
-	//	return 1;
-	//}
+	if(!strcmp(cmd, "jobs")){
+		listjobs(jobs, 1);
+		return 1;
+	}
 
 	return 0;
 }
