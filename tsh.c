@@ -187,13 +187,14 @@ void eval(char *cmdline)
 			}
 		}
 		else{
+			addjob(jobs, pid, (bg == 1 ? BG : FG), cmdline);
+			sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
 			if(bg){
-				addjob(jobs, pid, BG, cmdline);
 				printf("(%d) (%d) %s", pid2jid(pid), pid, cmdline);
 			}
 			else{
-				//addjob(jobs, pid, FG, cmdline);
-				waitpid(pid, &child_status, 0);
+				waitfg(pid);
 			}
 		}
 	}
@@ -219,6 +220,23 @@ int builtin_cmd(char **argv)
 
 void waitfg(pid_t pid, int output_fd)
 {
+	struct job_t *j = getjobpid(jobs, pid);
+	char buf[MAXLINE];
+
+	if(!j)
+		return;
+
+	while(j->pid == pid && j->state == FG)
+		sleep(1);
+
+	if(verbose){
+		memset(buf, '\0', MAXLINE);
+		sprintf(buf, "waitfg: Process (%d) no longer the fg process:q\n", pid);
+		if(write(output_fg, buf, strlen(buf)) < 0){
+			fprintf(stderr, "Error writing to file\n");
+			exit(1);
+		}
+	}
 	return;
 }
 
