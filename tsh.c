@@ -181,24 +181,31 @@ void eval(char *cmdline)
 	//parsing된 명령어를 전달
 	if(!builtin_cmd(argv)){
 		sigemptyset(&mask);
+		sigaddset(&mask, SIGCHLD);
 		sigaddset(&mask, SIGINT);
+		sigaddset(&mask, SIGTSTP);
+
+		sigprocmask(SIG_BLOCK, &mask, NULL);
+
 		if((pid = fork()) < 0)
 			unix_error("fork error");
 		if(pid == 0){
+			sigprocmask(SIG_UNBLOCK, &mask, NULL);
 			if((execve(argv[0], argv, environ) < 0)){
 				printf("%s : Command not found.\n", argv[0]);
 				exit(0);
 			}
 		}
 		else{
-			sigprocmask(SIG_UNBLOCK, &mask, NULL);
-
 			if(bg){
 				addjob(jobs, pid, BG, cmdline);
+				sigprocmask(SIG_UNBLOCK, &mask, NULL);
 				printf("(%d) (%d) %s", pid2jid(pid), pid, cmdline);
 			}
 			else{
+				sigprocmask(SIG_UNBLOCK, &mask, NULL);
 				waitpid(pid, &child_status, 0);
+				//waitfg(pid, 1);
 			}
 		}
 	}
@@ -257,11 +264,12 @@ void waitfg(pid_t pid, int output_fd)
  */
 void sigchld_handler(int sig) 
 {
-	pid_t pid = fgpid(jobs);
-	while((pid == waitpid(-1, NULL, 0)) > 0)
+	pid_t pid;
+	int status;
+
+	while((pid = waitpid(-1, &status, WNOHANG|WUNTRACED)) > 0) {
 		deletejob(jobs, pid);
-	if(errno != ECHILD)
-		unix_error("waitpid error");
+	}
 	return;
 }
 
@@ -274,10 +282,12 @@ void sigint_handler(int sig)
 {
 	pid_t pid = fgpid(jobs);
 	
-	if (pid > 0){
-		kill(-pid, sig);
-		printf("Job [%d] (%d) terminated by signal 2\n", pid2jid(pid), pid);
+	if (pid == 0){
+		return;
 	}
+
+	kill(-pid, SIGINT);
+	printf("Job [%d] (%d) terminated by signal 2\n", pid2jid(pid), pid);
 	return;
 }
 
