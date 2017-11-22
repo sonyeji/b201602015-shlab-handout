@@ -266,9 +266,10 @@ void sigint_handler(int sig)
 {
 	pid_t pid = fgpid(jobs);
 	
-	if (pid > 0)
+	if (pid > 0){
 		kill(-pid, SIGINT);
-	
+		printf("Job [%d] (%d) terminated by signal 2\n", pid2jid(pid), pid);
+	}
 	return;
 }
 
