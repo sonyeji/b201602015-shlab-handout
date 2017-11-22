@@ -59,6 +59,7 @@ char sbuf[MAXLINE];         /* for composing sprintf messages */
 /* Here are the functions that you will implement */
 void eval(char *cmdline);
 int builtin_cmd(char **argv);
+void bg(char **argv);
 void waitfg(pid_t pid, int output_fd);
 void sigchld_handler(int sig);
 void sigtstp_handler(int sig);
@@ -224,8 +225,15 @@ int builtin_cmd(char **argv)
 		listjobs(jobs, 1);
 		return 1;
 	}
-
+	
+	if(!strcmp(cmd, "bg")){
+		bg(argv);	
+	}
 	return 0;
+}
+
+void bg(char **argv){
+
 }
 
 void waitfg(pid_t pid, int output_fd)
