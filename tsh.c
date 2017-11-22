@@ -181,7 +181,7 @@ void eval(char *cmdline)
 	//parsing된 명령어를 전달
 	if(!builtin_cmd(argv)){
 		sigemptyset(&mask);
-		sigaddset(&mask, SIGCHLD);
+		sigaddset(&mask, SIGINT);
 		if((pid = fork()) < 0)
 			unix_error("fork error");
 		if(pid == 0){
@@ -257,6 +257,11 @@ void waitfg(pid_t pid, int output_fd)
  */
 void sigchld_handler(int sig) 
 {
+	pid_t pid = fgpid(jobs);
+	while((pid == waitpid(-1, NULL, 0)) > 0)
+		deletejob(jobs, pid);
+	if(errno != ECHILD)
+		unix_error("waitpid error");
 	return;
 }
 
@@ -269,7 +274,7 @@ void sigint_handler(int sig)
 {
 	pid_t pid = fgpid(jobs);
 	
-	if (pid != 0){
+	if (pid > 0){
 		kill(-pid, sig);
 		printf("Job [%d] (%d) terminated by signal 2\n", pid2jid(pid), pid);
 	}
