@@ -172,6 +172,7 @@ void eval(char *cmdline)
 	char *argv[MAXARGS];
 	pid_t pid;
 	int bg;
+	int child_status;
 	sigset_t mask;
 
 	//명령어를 parseline을 통해 분리
@@ -179,6 +180,8 @@ void eval(char *cmdline)
 
 	//parsing된 명령어를 전달
 	if(!builtin_cmd(argv)){
+		sigemptyset(&mask);
+		sigaddset(&mask, SIGCHLD);
 		if((pid = fork()) < 0)
 			unix_error("fork error");
 		if(pid == 0){
@@ -188,14 +191,14 @@ void eval(char *cmdline)
 			}
 		}
 		else{
-			addjob(jobs, pid, (bg == 1 ? BG : FG), cmdline);
 			sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
 			if(bg){
+				addjob(jobs, pid, BG, cmdline);
 				printf("(%d) (%d) %s", pid2jid(pid), pid, cmdline);
 			}
 			else{
-				waitfg(pid, 1);
+				waitpid(pid, &child_status, 0);
 			}
 		}
 	}
@@ -266,8 +269,8 @@ void sigint_handler(int sig)
 {
 	pid_t pid = fgpid(jobs);
 	
-	if (pid > 0){
-		kill(-pid, SIGINT);
+	if (pid != 0){
+		kill(-pid, sig);
 		printf("Job [%d] (%d) terminated by signal 2\n", pid2jid(pid), pid);
 	}
 	return;
