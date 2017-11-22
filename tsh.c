@@ -199,6 +199,7 @@ void eval(char *cmdline)
 		else{
 			addjob(jobs, pid, (bg == 1 ? BG : FG), cmdline);
 			sigprocmask(SIG_UNBLOCK, &mask, NULL);
+			
 			if(bg){
 				printf("(%d) (%d) %s", pid2jid(pid), pid, cmdline);
 			}
