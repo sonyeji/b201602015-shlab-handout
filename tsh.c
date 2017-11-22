@@ -268,7 +268,6 @@ void sigchld_handler(int sig)
 	while((pid = waitpid(-1, &status, WNOHANG|WUNTRACED)) > 0) {
 		if(WIFSTOPPED(status)){
 			getjobpid(jobs, pid)->state = ST;
-		deletejob(jobs, pid);
 		}
 		else if(WIFSIGNALED(status)){
 			deletejob(jobs, pid);
@@ -305,6 +304,14 @@ void sigint_handler(int sig)
  */
 void sigtstp_handler(int sig) 
 {
+	pid_t pid = fgpid(jobs);
+
+	if(pid == 0){
+		return;
+	}
+
+	kill(-pid, SIGTSTP);
+	printf("Job [%d] (%d) stopped by signal 20\n", pid2jid(pid), pid);
 	return;
 }
 
