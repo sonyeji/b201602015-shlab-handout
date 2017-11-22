@@ -194,7 +194,7 @@ void eval(char *cmdline)
 				printf("(%d) (%d) %s", pid2jid(pid), pid, cmdline);
 			}
 			else{
-				waitfg(pid);
+				waitfg(pid, 1);
 			}
 		}
 	}
@@ -232,7 +232,7 @@ void waitfg(pid_t pid, int output_fd)
 	if(verbose){
 		memset(buf, '\0', MAXLINE);
 		sprintf(buf, "waitfg: Process (%d) no longer the fg process:q\n", pid);
-		if(write(output_fg, buf, strlen(buf)) < 0){
+		if(write(output_fd, buf, strlen(buf)) < 0){
 			fprintf(stderr, "Error writing to file\n");
 			exit(1);
 		}
