@@ -172,6 +172,7 @@ void eval(char *cmdline)
 	char *argv[MAXARGS];
 	pid_t pid;
 	int bg;
+	sigset_t mask;
 
 	//명령어를 parseline을 통해 분리
 	bg = parseline(cmdline, argv);
