@@ -172,7 +172,6 @@ void eval(char *cmdline)
 	char *argv[MAXARGS];
 	pid_t pid;
 	int bg;
-	int child_status;
 	sigset_t mask;
 
 	//명령어를 parseline을 통해 분리
@@ -191,21 +190,20 @@ void eval(char *cmdline)
 			unix_error("fork error");
 		if(pid == 0){
 			sigprocmask(SIG_UNBLOCK, &mask, NULL);
+			setpgid(0, 0);
 			if((execve(argv[0], argv, environ) < 0)){
 				printf("%s : Command not found.\n", argv[0]);
 				exit(0);
 			}
 		}
 		else{
+			addjob(jobs, pid, (bg == 1 ? BG : FG), cmdline);
+			sigprocmask(SIG_UNBLOCK, &mask, NULL);
 			if(bg){
-				addjob(jobs, pid, BG, cmdline);
-				sigprocmask(SIG_UNBLOCK, &mask, NULL);
 				printf("(%d) (%d) %s", pid2jid(pid), pid, cmdline);
 			}
 			else{
-				sigprocmask(SIG_UNBLOCK, &mask, NULL);
-				waitpid(pid, &child_status, 0);
-				//waitfg(pid, 1);
+				waitfg(pid, 1);
 			}
 		}
 	}
@@ -268,7 +266,16 @@ void sigchld_handler(int sig)
 	int status;
 
 	while((pid = waitpid(-1, &status, WNOHANG|WUNTRACED)) > 0) {
+		if(WIFSTOPPED(status)){
+			getjobpid(jobs, pid)->state = ST;
 		deletejob(jobs, pid);
+		}
+		else if(WIFSIGNALED(status)){
+			deletejob(jobs, pid);
+		}
+		else if(WIFEXITED(status)){
+			deletejob(jobs, pid);
+		}
 	}
 	return;
 }
