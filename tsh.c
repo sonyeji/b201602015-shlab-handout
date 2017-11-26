@@ -233,7 +233,23 @@ int builtin_cmd(char **argv)
 }
 
 void bg(char **argv){
+	struct job_t *job;
+	char *tmp = argv[1];
+	int jid;
+	pid_t pid;
 
+	if(tmp[0] == '%'){
+		jid = atoi(&tmp[1]);
+		job = getjobjid(jobs, jid);
+		if(job == NULL){
+			return;
+		}
+		else{
+			pid = job-> pid;
+		}
+	}//jid일 경우
+
+	
 }
 
 void waitfg(pid_t pid, int output_fd)
