@@ -253,7 +253,7 @@ void bg(char **argv){
 		}
 	}//jid일 경우
 	else{
-		pid = atoi(tmp[0]);
+		pid = atoi(tmp);
 		if (pid == 0){
 			return;
 		}
@@ -262,10 +262,10 @@ void bg(char **argv){
 			return;
 		}
 	}
-	
+
+	kill(-pid, SIGCONT);
+
 	if(!strcmp(argv[0], "bg")){
-		if(kill(-(job->pid), SIGCONT) < 0)
-			printf("error");
 		job->state = BG;
 		printf("[%d] (%d) %s", job->jid, job->pid, job->cmdline);
 	}
