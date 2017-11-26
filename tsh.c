@@ -234,33 +234,29 @@ int builtin_cmd(char **argv)
 
 void bg(char **argv){
 	struct job_t *job;
-	char *tmp = argv[1];
 	int jid;
 	pid_t pid;
 
-	if(tmp == NULL){
+	if(argv[1] == NULL){
 		return;
 	}
 
-	if(tmp[0] == '%'){
-		jid = atoi(&tmp[1]);
-		job = getjobjid(jobs, jid);
-		if(job == NULL){
+	if(argv[1][0] == '%'){
+		jid = atoi(&argv[1][1]);
+		
+		if(!(job = getjobjid(jobs, jid))){
 			return;
-		}
-		else{
-			pid = job-> pid;
 		}
 	}//jid일 경우
+	else if(isdigit(argv[1][0])){
+		pid = atoi(argv[1]);
+		
+		if(!(job = getjobpid(jobs, pid))){
+			return;
+		}
+	}
 	else{
-		pid = atoi(tmp);
-		if (pid == 0){
-			return;
-		}
-		job = getjobpid(jobs, pid);
-		if(job == NULL){
-			return;
-		}
+		return;
 	}
 
 	kill(-pid, SIGCONT);
