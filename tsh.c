@@ -238,6 +238,10 @@ void bg(char **argv){
 	int jid;
 	pid_t pid;
 
+	if(tmp == NULL){
+		return;
+	}
+
 	if(tmp[0] == '%'){
 		jid = atoi(&tmp[1]);
 		job = getjobjid(jobs, jid);
@@ -248,12 +252,22 @@ void bg(char **argv){
 			pid = job-> pid;
 		}
 	}//jid일 경우
-
+	else{
+		pid = atoi(tmp[0]);
+		if (pid == 0){
+			return;
+		}
+		job = getjobpid(jobs, pid);
+		if(job == NULL){
+			return;
+		}
+	}
+	
 	if(!strcmp(argv[0], "bg")){
-		if(kill(-(j->pid), SIGCONT) < 0)
+		if(kill(-(job->pid), SIGCONT) < 0)
 			printf("error");
-		j->state = BG;
-		printf("[%d] (%d) %s", j->jid, j->pid, j->cmdline);
+		job->state = BG;
+		printf("[%d] (%d) %s", job->jid, job->pid, job->cmdline);
 	}
 	return;
 }
