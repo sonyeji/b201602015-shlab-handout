@@ -249,7 +249,13 @@ void bg(char **argv){
 		}
 	}//jid일 경우
 
-	
+	if(!strcmp(argv[0], "bg")){
+		if(kill(-(j->pid), SIGCONT) < 0)
+			printf("error");
+		j->state = BG;
+		printf("[%d] (%d) %s", j->jid, j->pid, j->cmdline);
+	}
+	return;
 }
 
 void waitfg(pid_t pid, int output_fd)
