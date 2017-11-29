@@ -227,7 +227,8 @@ int builtin_cmd(char **argv)
 	}
 	
 	if(!strcmp(cmd, "bg")){
-		bg(argv);	
+		bg(argv);
+		return 1;
 	}
 	return 0;
 }
@@ -247,6 +248,8 @@ void bg(char **argv){
 		if(!(job = getjobjid(jobs, jid))){
 			return;
 		}
+		pid = job->pid;
+		kill(pid, SIGCONT);
 	}//jid일 경우
 	else if(isdigit(argv[1][0])){
 		pid = atoi(argv[1]);
