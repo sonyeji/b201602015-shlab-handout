@@ -271,6 +271,7 @@ void bgfg(char **argv){
 	else if(!strcmp(argv[0], "fg")){
 		job->state = FG;
 		printf("[%d] (%d) %s", job->jid, job->pid, job->cmdline);
+		waitfg(job->pid, 1);
 	}
 	return;
 }
